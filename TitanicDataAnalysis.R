@@ -27,7 +27,7 @@ library(ggplot2)
 #Hypothesis - Rich folks survived at a higher rate
 train$Pclass <- as.factor(train$Pclass)
 ggplot(train,aes(x=Pclass,fill = factor(Survived))) +
-  stat_count(width=0.5) +
+  stat_count(width=0.5,position = position_stack(reverse = TRUE)) +
   xlab("Pclass") +
   ylab("Total Count") +
   labs(fill = "Survived")
@@ -84,7 +84,7 @@ data.combined$title <- as.factor(titles)
 # first 891 rows
 
 ggplot(data.combined[1:891,],aes(x=title,fill = Survived)) +
-  stat_count(binwidth = 0.5) +
+  stat_count(binwidth = 0.5,position = position_stack(reverse = TRUE)) +
   facet_wrap(~Pclass) +
   ggtitle("Pclass") +
   xlab("Title") +
@@ -98,7 +98,7 @@ table(data.combined$Sex)
 #Visualize the 3-way relationship of sex, pclass, and survival, compare
 
 ggplot(data.combined[1:891,],aes(x=Sex,fill=Survived)) +
-  stat_count(width = 0.5) +
+  stat_count(width = 0.5,position = position_stack(reverse = TRUE)) +
   facet_wrap(~Pclass) +
   ggtitle("Pclass") +
   xlab("Sex") +
@@ -113,7 +113,7 @@ library(dplyr)
 
 ggplot(arrange(data.combined[1:891,],Survived),aes(x=Age,fill=Survived)) +
   facet_wrap(~Sex + Pclass) +
-  geom_histogram(binwidth = 10) +
+  geom_histogram(binwidth = 10,position = position_stack(reverse = TRUE)) +
   ggtitle("Pclass") +
   xlab("Age") +
   ylab("Total Count")
@@ -197,11 +197,205 @@ ggplot(data.combined[1:891,],aes(x=family.size,fill=Survived)) +
   labs(fill = "Survived")
 
 
+# Based on the huge number of levels ticket really isn't a factor variable it is a string
+# Convert and display first 20
+data.combined$Ticket <- as.character(data.combined$Ticket)
+data.combined$Ticket[1:20]
+
+# THere is no immediate apparent structure in the data, let's see if we can find some
+# We'll start with taking a look at just the first char for each
+ticket.first.char <- ifelse(data.combined$Ticket == ""," ",substr(data.combined$Ticket,1,1))
+unique(ticket.first.char)
+
+# We can make a factor for analysis purposes and visualize
+data.combined$ticket.first.char <- as.factor(ticket.first.char)
+
+ggplot(data.combined[1:891,],aes(x=ticket.first.char,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  ggtitle("Survivability by ticket.first.char") +
+  xlab("ticket.first.char") +
+  ylab("Total Count") +
+  ylim(0,350) +
+  labs(fill = "Survived")
+
+# Ticket seems like it might be predeictive, drill down a bit
+ggplot(data.combined[1:891,],aes(x=ticket.first.char,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass) +
+  ggtitle("Pclass") +
+  xlab("ticket.first.char") +
+  ylab("Total Count") +
+  ylim(0,150) +
+  labs(fill = "Survived")
+
+#Lastly, see if we get a pattern when using combination of pclass & title
+ggplot(data.combined[1:891,],aes(x=ticket.first.char,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass + title) +
+  ggtitle("Pclass, Title") +
+  xlab("ticket.first.char") +
+  ylab("Total Count") +
+  ylim(0,200) +
+  labs(fill = "Survived")
+
+
+# Next up - the fares Titanic passengers paid
+summary(data.combined$Fare)
+length(unique(data.combined$Fare))
+
+#Can't make a fare a factor, treat as numeric and visualize with histogram
+
+ggplot(data.combined,aes(x=Fare)) +
+  geom_histogram(binwidth=5) +
+  ggtitle("Combined Fare Distribution") +
+  xlab("Fare") +
+  ylab("Total Count") +
+  ylim(0,200)
+
+#Let's check to see if fare has predictive power
+ggplot(data.combined[1:891,],aes(x=Fare,fill=Survived)) +
+  geom_histogram(binwidth=5,position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass + title) +
+  ggtitle("Pclass, Title") +
+  xlab("Fare") +
+  ylab("Total Count") +
+  ylim(0,50) +
+  labs(fill="Survived")
+
+# Analysis of the cabin variable
+str(data.combined$Cabin)
 
 
 
+# Cabin really isn't a factor, make a string and display first 100
+data.combined$Cabin <- as.character(data.combined$Cabin)
+data.combined$Cabin[1:100]
+
+# Replace empty cabins with a "U"
+data.combined[which(data.combined$Cabin == ""),"Cabin"] <- "U"
+data.combined$Cabin[1:100]
+
+# Take a look at just the first char as a factor
+cabin.first.char <- as.factor(substr(data.combined$Cabin,1,1))
+str(cabin.first.char)
+levels(cabin.first.char)
+
+# Add to combined data set and plot
+data.combined$cabin.first.char <- cabin.first.char
+
+# High level plot
+ggplot(data.combined[1:891,],aes(x=cabin.first.char,fill = Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  ggtitle("Survivability by cabin.first.char") +
+  xlab("cabin.first.char") +
+  ylab("Total Count") +
+  ylim(0,750) +
+  labs(fill = "Survived")
+  
+# Could have some predictive power, drill in
+ggplot(data.combined[1:891,],aes(x=cabin.first.char,fill = Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass) +
+  ggtitle("Survivability by cabin.first.char") +
+  xlab("Pclass") +
+  ylab("Total Count") +
+  ylim(0,500) +
+  labs(fill = "Survived")
+
+# Does this feature improve upon pclass + title?
+
+ggplot(data.combined[1:891,],aes(x=cabin.first.char,fill = Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass + title) +
+  ggtitle("Pclass, Title") +
+  xlab("cabin.first.char") +
+  ylab("Total Count") +
+  ylim(0,400) +
+  labs(fill = "Survived")
+
+# What about folks with multiple cabins?
+data.combined$cabin.multiple <- as.factor(ifelse(str_detect(data.combined$Cabin," "),"Y","N"))
 
 
+
+ggplot(data.combined[1:891,],aes(x=cabin.multiple,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass + title) +
+  ggtitle("Pclass, Title") +
+  xlab("cabin.multiple") +
+  ylab("Total Count") +
+  ylim(0,350) +
+  labs(fill = "Survived")
+
+# Does the survivability depend on where you got onboard the Titanic?
+str(data.combined$Embarked)
+levels(data.combined$Embarked)
+
+# Plot data for analysis
+ggplot(data.combined[1:891,],aes(x=Embarked,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass + title) +
+  ggtitle("Pclass, Title") +
+  xlab("Embarked") +
+  ylab("Total Count") +
+  ylim(0,300) +
+  labs(fill = "Survived")
+
+#=============================================================
+#
+# Video #4 Exploratory Modeling
+#
+#============================================================
+
+# After installing the randomForest package
+
+library(randomForest)
+
+# Train a Rndom Forest with the default parameters using pclass & title
+rf.train.1 <- data.combined[1:891,c("Pclass","title")]
+rf.label <- as.factor(train$Survived)
+
+set.seed(1234)
+rf.1 <- randomForest(x=rf.train.1,y=rf.label,importance = TRUE,ntree = 1000)
+
+rf.1
+varImpPlot(rf.1)
+
+# Train a Random Forest using pclass, title & sibsp
+
+rf.train.2 <- data.combined[1:891,c("Pclass","title","SibSp")]
+
+set.seed(1234)
+rf.2 <- randomForest(x=rf.train.2,y=rf.label,importance = TRUE,ntree = 1000)
+rf.2
+varImpPlot(rf.2)
+
+
+# Train a Random Forest using pclass, title & parch
+
+rf.train.3 <- data.combined[1:891,c("Pclass","title","Parch")]
+
+set.seed(1234)
+rf.3 <- randomForest(x=rf.train.3,y=rf.label,importance = TRUE,ntree = 1000)
+rf.3
+varImpPlot(rf.3)
+
+
+# Train a Random Forest using pclass, title, sibsp & parch
+rf.train.4 <- data.combined[1:891,c("Pclass","title","SibSp","Parch")]
+
+set.seed(1234)
+rf.4 <- randomForest(x=rf.train.4,y=rf.label,importance = TRUE,ntree = 1000)
+rf.4
+varImpPlot(rf.4)
+
+# Train a Random Forest using pclass, title, & family.size
+rf.train.5 <- data.combined[1:891,c("Pclass","title","family.size")]
+
+set.seed(1234)
+rf.5 <- randomForest(x=rf.train.5,y=rf.label,importance = TRUE,ntree = 1000)
+rf.5
+varImpPlot(rf.5)
 
 
 
