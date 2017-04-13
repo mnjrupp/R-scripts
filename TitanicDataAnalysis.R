@@ -397,6 +397,69 @@ rf.5 <- randomForest(x=rf.train.5,y=rf.label,importance = TRUE,ntree = 1000)
 rf.5
 varImpPlot(rf.5)
 
+# Train a Random Forest using pclass,title,sibsp,& family.size
+rf.train.6 <- data.combined[1:891,c("Pclass","title","SibSp","family.size")]
+
+set.seed(1234)
+rf.6 <- randomForest(x=rf.train.6,y=rf.label,importance = TRUE,ntree = 1000)
+rf.6
+varImpPlot(rf.6)
+
+
+# Train a Random Forest using pclass,title,Parch,& family.size
+rf.train.7 <- data.combined[1:891,c("Pclass","title","Parch","family.size")]
+
+set.seed(1234)
+rf.7 <- randomForest(x=rf.train.7,y=rf.label,importance = TRUE,ntree = 1000)
+rf.7
+varImpPlot(rf.7)
+
+
+#=============================================================
+#
+# Video 5 - Cross Validation
+#
+#=============================================================
+
+
+# Before we jump into features engineering we need to establish a methodology
+# for estimating our error rate on the test set (i.e. unseen data). This is
+# critical, for without this we are more likely to overfit. Let's start with
+# a submission of rf.5 to Kaggle to see if our OOB error estimate is accurate
+
+
+# Subset our test records and features
+test.submit.df <- data.combined[892:1309,c("Pclass","title","family.size")]
+
+#Make predictions
+rf.5.preds <- predict(rf.5,test.submit.df)
+table(rf.5.preds)
+
+
+
+
+
+#=============================================================
+#
+# Video 6 - Exploratory Modeling 2
+#
+#=============================================================
+
+# Let's use a single decision tree to better understand what's going on
+# with our features. Obviously Random Forests are far more powerful than single trees,
+# but single trees have the advantage of being easier to understand
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
