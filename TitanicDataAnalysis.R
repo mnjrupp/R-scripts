@@ -435,6 +435,54 @@ test.submit.df <- data.combined[892:1309,c("Pclass","title","family.size")]
 rf.5.preds <- predict(rf.5,test.submit.df)
 table(rf.5.preds)
 
+# Write out a CSV file for submission to Kaggle
+submit.df <- data.frame(PassengerId = rep(892:1309), Survived = rf.5.preds)
+
+write.csv(submit.df,file = "RF_SUB_20170420_1.csv",row.names = FALSE)
+
+#Let's look into cross-validation using the caret package to see if we can get
+# more accurate estimates
+
+library(caret)
+library(doSNOW)
+
+# Research has shown that 10-fold CV repeated 10 times is the best place to start
+# however there are no hard and fast rules - this is where the experience of the 
+# Data Scientist (i.e. the "art") comes into play. We'll start with 10-fold CV,
+# repeated 10 times and see how it goes.
+
+# Leverage caret to create 100 total folds, but ensure that the ratio of those
+# that survived and perished in each fold matches the overall training set. This
+# is known as stratified cross validation and generally provides better results.
+
+set.seed(2348)
+cv.10.folds <- createMultiFolds(rf.label,k=10,times=10)
+
+# Check stratification
+table(rf.label)
+342/549
+
+table(rf.label[cv.10.folds[[33]]])
+308/494
+
+#Set up caret's trainControl object per above.
+ctrl.1 <-trainControl(method = "repeatedcv",number = 10,repeats = 10,
+                      index = cv.10.folds)
+
+#Set up doSNOW package for multi-core training. This is helpful as we're
+# going to be training a lot of trees.
+# NOTE - This works on Windows and Mac, unlike doMC
+cl <- makeCluster(2 , type = "SOCK")
+registerDoSNOW(cl)
+
+
+# Set seed for reproducibility and train
+set.seed(34324)
+rf.5.cv.1 <- train(x=rf.train.5,y=rf.label,method="rf",tuneLength=3,
+                   ntree = 1000,trControl = ctrl.1)
+
+
+
 
 
 
