@@ -481,39 +481,47 @@ set.seed(34324)
 rf.5.cv.1 <- train(x=rf.train.5,y=rf.label,method="rf",tuneLength=3,
                    ntree = 1000,trControl = ctrl.1)
 
+#Shutdown cluster
+stopCluster(cl)
 
+# Ckeck out results
+rf.5.cv.1
 
+# The above is only slightly more pessimistic than the rf.5 OOB prediction. but
+# not pessimistic enough. Let's try -fold CV repeated 10 times
+set.seed(5983)
+cv.5.folds <- createMultiFolds(rf.label,k=5,times=10)
 
+ctrl.2 <- trainControl(method = "repeatedcv",number=5,repeats=10,
+                       index = cv.5.folds)
 
+cl <- makeCluster(2,type = "SOCK")
+registerDoSNOW(cl)
 
+set.seed(89472)
+rf.5.cv.2 <- train(x=rf.train.5,y=rf.label,method = "rf",tuneLength=3,
+                   ntree=1000,trControl=ctrl.2)
 
-#=============================================================
-#
-# Video 6 - Exploratory Modeling 2
-#
-#=============================================================
+# Shutdown cluster
+stopCluster(cl)
 
-# Let's use a single decision tree to better understand what's going on
-# with our features. Obviously Random Forests are far more powerful than single trees,
-# but single trees have the advantage of being easier to understand
+rf.5.cv.2
 
+#5-fold CV isn't better. Move to 3-fold CV repeated 10 times
+set.seed(37596)
+cv.3.folds <- createMultiFolds(rf.label,k=3,times=10)
 
+ctrl.3 <- trainControl(method = "repeatedcv",number=3,repeats=10,
+                       index = cv.3.folds)
 
+cl <- makeCluster(2,type = "SOCK")
+registerDoSNOW(cl)
 
+set.seed(94622)
+rf.5.cv.3 <- train(x=rf.train.5,y=rf.label,method = "rf",tuneLength=3,
+                   ntree=64,trControl=ctrl.3)
 
+# Shutdown cluster
+stopCluster(cl)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+rf.5.cv.3
