@@ -481,30 +481,33 @@ set.seed(34324)
 rf.5.cv.1 <- train(x=rf.train.5,y=rf.label,method="rf",tuneLength=3,
                    ntree = 1000,trControl = ctrl.1)
 
-#Shutdown cluster
+
+#Shut Down Server
 stopCluster(cl)
 
-# Ckeck out results
+# Check out results
 rf.5.cv.1
 
-# The above is only slightly more pessimistic than the rf.5 OOB prediction. but
-# not pessimistic enough. Let's try -fold CV repeated 10 times
+# The above is only slightly more pessimistic than the rf.5 OOB prediction , but
+# not pessimistic enough. Let's try 5-fold CV repeated 10 times.
+
 set.seed(5983)
 cv.5.folds <- createMultiFolds(rf.label,k=5,times=10)
 
-ctrl.2 <- trainControl(method = "repeatedcv",number=5,repeats=10,
-                       index = cv.5.folds)
+ctrl.2 <- trainControl(method="repeatedcv",number=5,repeats=10,
+                       index=cv.5.folds)
 
 cl <- makeCluster(2,type = "SOCK")
 registerDoSNOW(cl)
 
 set.seed(89472)
-rf.5.cv.2 <- train(x=rf.train.5,y=rf.label,method = "rf",tuneLength=3,
-                   ntree=1000,trControl=ctrl.2)
+rf.5.cv.2 <- train(x=rf.train.5,y=rf.label,method="rf",tuneLength = 3,
+                   ntree = 1000,trControl = ctrl.2)
 
-# Shutdown cluster
+# Shutdown Cluster
 stopCluster(cl)
 
+# check results
 rf.5.cv.2
 
 #5-fold CV isn't better. Move to 3-fold CV repeated 10 times
@@ -525,3 +528,72 @@ rf.5.cv.3 <- train(x=rf.train.5,y=rf.label,method = "rf",tuneLength=3,
 stopCluster(cl)
 
 rf.5.cv.3
+#=============================================================
+#
+# Video 6 - Exploratory Modeling 2
+#
+#=============================================================
+
+# Let's use a single decision tree to better understand what's going on
+# with our features. Obviously Random Forests are far more powerful than single trees,
+# but single trees have the advantage of being easier to understand
+
+# Install and load packages
+# install.packages("rpart")
+# install.packages("rpart.plot")
+library(rpart)
+library(rpart.plot)
+
+# Per video #5 let's use 3-fold CV repeated 10 times
+# Create utility function
+rpart.cv <- function(seed,training,labels,ctrl){
+  cl <-makeCluster(2,type = "SOCK")
+  registerDoSNOW(cl)
+  set.seed(seed)
+  # Leverage formula interface for training
+  rpart.cv <- train(x=training,labels,method="rpart",tuneLength=30,
+                    trControl=ctrl)
+  # Shutdown server
+  stopCluster(cl)
+  return (rpart.cv)
+}
+
+# grab features
+features <- c("Pclass","title","family.size")
+rpart.train.1 <-data.combined[1:891,features]
+
+# Run CV and check out results
+rpart.1.cv.1 <- rpart.cv(94622,rpart.train.1,rf.label,ctrl.3)
+rpart.1.cv.1
+
+
+# Plot
+prp(rpart.1.cv.1$finalModel,type = 0,extra =1,under = TRUE)
+
+
+
+
+# The plot bring out some interesting lines of investigation. Namely:
+#      1- Titles of "Mr." and "Other" are predicted to perish at an
+#         overall accurancy rate of 83.2%.
+#      2- Titles of "Master.", "Miss.", & "Mrs." in 1st & 2nd class
+#         are predicted to survuve at an overall accurancy rate of 94.9%
+#      3- Titles of "Master.", "Miss.", & "Mrs." in 3rd class with
+#         family sizes equal to 5,6,8, & 11 are predicted to perish
+#         with 100% accuracy.
+#      4- Titles of "Master.", "Miss.", & "Mrs." in 3rd class with
+#         family sizes not equal to 5,6,8, & 11 are predicted to 
+#         survive with 59.6% accurancy
+
+
+# Both rpart and rf confirm that title is important, let's investigate further
+table(data.combined$title)
+
+
+
+
+
+
+
+
+
