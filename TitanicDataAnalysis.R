@@ -481,33 +481,30 @@ set.seed(34324)
 rf.5.cv.1 <- train(x=rf.train.5,y=rf.label,method="rf",tuneLength=3,
                    ntree = 1000,trControl = ctrl.1)
 
-
-#Shut Down Server
+#Shutdown cluster
 stopCluster(cl)
 
-# Check out results
+# Ckeck out results
 rf.5.cv.1
 
-# The above is only slightly more pessimistic than the rf.5 OOB prediction , but
-# not pessimistic enough. Let's try 5-fold CV repeated 10 times.
-
+# The above is only slightly more pessimistic than the rf.5 OOB prediction. but
+# not pessimistic enough. Let's try -fold CV repeated 10 times
 set.seed(5983)
 cv.5.folds <- createMultiFolds(rf.label,k=5,times=10)
 
-ctrl.2 <- trainControl(method="repeatedcv",number=5,repeats=10,
-                       index=cv.5.folds)
+ctrl.2 <- trainControl(method = "repeatedcv",number=5,repeats=10,
+                       index = cv.5.folds)
 
 cl <- makeCluster(2,type = "SOCK")
 registerDoSNOW(cl)
 
 set.seed(89472)
-rf.5.cv.2 <- train(x=rf.train.5,y=rf.label,method="rf",tuneLength = 3,
-                   ntree = 1000,trControl = ctrl.2)
+rf.5.cv.2 <- train(x=rf.train.5,y=rf.label,method = "rf",tuneLength=3,
+                   ntree=1000,trControl=ctrl.2)
 
-# Shutdown Cluster
+# Shutdown cluster
 stopCluster(cl)
 
-# check results
 rf.5.cv.2
 
 #5-fold CV isn't better. Move to 3-fold CV repeated 10 times
@@ -528,6 +525,8 @@ rf.5.cv.3 <- train(x=rf.train.5,y=rf.label,method = "rf",tuneLength=3,
 stopCluster(cl)
 
 rf.5.cv.3
+
+
 #=============================================================
 #
 # Video 6 - Exploratory Modeling 2
@@ -539,33 +538,37 @@ rf.5.cv.3
 # but single trees have the advantage of being easier to understand
 
 # Install and load packages
-# install.packages("rpart")
-# install.packages("rpart.plot")
+#install.packages("rpart")
+#install.packages("rpart.plot")
 library(rpart)
 library(rpart.plot)
 
-# Per video #5 let's use 3-fold CV repeated 10 times
+# Per video #5, let's use 3-fold CV repeated 10 times
+
 # Create utility function
-rpart.cv <- function(seed,training,labels,ctrl){
-  cl <-makeCluster(2,type = "SOCK")
+rpart.cv <-function(seed,training,labels,ctrl){
+  cl <-makeCluster(6,type="SOCK")
   registerDoSNOW(cl)
+  
   set.seed(seed)
   # Leverage formula interface for training
-  rpart.cv <- train(x=training,labels,method="rpart",tuneLength=30,
-                    trControl=ctrl)
-  # Shutdown server
+  rpart.cv <- train(x=training,y=labels,method="rpart",tuneLength=30,
+                    trControl = ctrl)
+  
+  # Shutdown cluster
   stopCluster(cl)
+  
   return (rpart.cv)
+
 }
 
-# grab features
+# Grab features
 features <- c("Pclass","title","family.size")
-rpart.train.1 <-data.combined[1:891,features]
+rpart.train.1 <- data.combined[1:891,features]
 
 # Run CV and check out results
 rpart.1.cv.1 <- rpart.cv(94622,rpart.train.1,rf.label,ctrl.3)
 rpart.1.cv.1
-
 
 # Plot
 prp(rpart.1.cv.1$finalModel,type = 0,extra =1,under = TRUE)
@@ -588,6 +591,84 @@ prp(rpart.1.cv.1$finalModel,type = 0,extra =1,under = TRUE)
 
 # Both rpart and rf confirm that title is important, let's investigate further
 table(data.combined$title)
+
+#Parse out the last name and title
+data.combined[1:25,"Name"]
+
+name.splits <- str_split(data.combined$Name,",")
+name.splits[1]
+last.names <- sapply(name.splits,"[",1)
+last.names[1:10]
+
+# Add last names to dataframe in case we find it useful later
+data.combined$last.name <-last.names
+
+
+# now for titles
+name.splits <- str_split(sapply(name.splits,"[",2)," ")
+titles <- sapply(name.splits,"[",2)
+unique(titles)
+
+
+# What's up with a title of 'the'?
+data.combined[which(titles== "the"),]
+
+# Re-map titles to be more exact
+titles[titles %in% c("Dona.","the")] <- "Lady."
+titles[titles %in% c("Ms.","Mlle.")] <- "Miss."
+titles[titles == "Mme."] <-"Mrs."
+titles[titles %in% c("Jonkheer.","Don.")] <- "Sir."
+titles[titles %in% c("Col.","Capt.","Major.")] <-"Officer."
+table(titles)
+
+
+#Make title a factor
+data.combined$new.title <-as.factor(titles)
+
+# Visualize new version of title
+ggplot(data.combined[1:891,],aes(x=new.title,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass) +
+  ggtitle("Survival Rates for new.title by Pclass")
+
+
+# Collapse titles based on visual analysis
+indexes <-which(data.combined$new.title == "Lady.")
+data.combined$new.title[indexes] <- "Mrs."
+
+
+indexes <- which(data.combined$new.title == "Dr." |
+                   data.combined$new.title == "Rev." |
+                   data.combined$new.title == "Sir." |
+                   data.combined$new.title == "Officer.")
+
+data.combined$new.title[indexes] <- "Mr."
+
+
+# Visualize
+ggplot(data.combined[1:891,],aes(x=new.title,fill=Survived)) +
+  geom_bar(position = position_stack(reverse = TRUE)) +
+  facet_wrap(~Pclass) +
+  ggtitle("Survival Rates for Collapsed new.title by Pclass")
+
+
+
+# Grab features
+features <- c("Pclass","new.title","family.size")
+rpart.train.2 <- data.combined[1:891,features]
+
+#Run CV and check out results
+rpart.2.cv.1 <-rpart.cv(94622,rpart.train.2,rf.label,ctrl.3)
+rpart.2.cv.1
+
+
+#Plot
+prp(rpart.2.cv.1$finalModel,type = 0,extra = 1,under = TRUE)
+
+
+
+
+
 
 
 
