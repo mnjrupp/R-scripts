@@ -60,4 +60,91 @@ lines(1:20,p1)
 lines(1:20,p2,col="red")
 lines(1:20,p3,col="orange")
 
+#-----------------------------------------------------
+# Generalized Linear and eneralized least 
+#-----------------------------------------------------
+plot(Ozone~Wind,airquality)
+model1<-lm(Ozone~Wind,airquality)
+plot(model1)
+coef(model1)
+
+#Coefficients:
+# (Intercept)         Wind  
+# 96.873       -5.551  
+
+# predictions for Wind speeds of 19 and 20 mph:
+Ozone1<-coef(model1)[1]+coef(model1)[2]*19
+Ozone2<-coef(model1)[1]+coef(model1)[2]*20
+
+# Create a model using generalized lm
+
+model2<-glm(Ozone~Wind,airquality,family=poisson)
+coef(model2)
+
+#coef(model2)
+# (Intercept)        Wind 
+# 5.0795877  -0.1488753 
+
+Ozone1.glm<-exp(coef(model2)[1]+coef(model2)[2]*19)
+Ozone2.glm<-exp(coef(model2)[1]+coef(model2)[2]*20)
+
+Ozone2.glm/Ozone1.glm
+#0.8616765
+
+exp(coef(model2)[2]) #exp(-0.1488753)
+#  0.8616765
+
+library(nlme)
+
+model3<-gls(Ozone~Wind,airquality,na.action = na.exclude)
+
+# use the paste function to create a date with the Month & Day column.
+# the airquality data represents 1973
+
+airquality$Date<-as.Date(paste(1973,airquality$Month,airquality$Day,sep="-"))
+
+library(lattice)
+
+xyplot(Ozone~Date,airquality)
+
+model4<-gls(Ozone~Wind*Date,airquality,na.action=na.exclude)
+# create a subset of the data because of missing data
+air2<-subset(airquality,complete.cases(Ozone))
+
+model5<-gls(Ozone~Wind*Date,air2)
+
+plot(ACF(model5,form=~Date),alpha=0.05)
+
+model6<-update(model5,correlation=corAR1())
+
+install.packages(MuMIn)
+library(MuMIn)
+AICc(model5,model6)
+summary(model6)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
