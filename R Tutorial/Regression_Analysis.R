@@ -175,21 +175,86 @@ mydata$rank=as.factor(mydata$rank)
 summary(mydata)
 xtabs(~admit+rank,data = mydata)
 
+# Using the glm Generalized Linear Model function
+fit<-glm(admit ~ gre + gpa + rank,family = binomial,data=mydata)
+summary(fit)
 
+#--------------------------------------------------------------
+# Cluster Analysis
+#- It groups the data objects based on the information that is found in the data that
+#   describes the objects in other groups
+# -The goal of this procedure is that the objects in a group are similar to one another
+#   and are different from the objects in other groups
+# -The greater the similarity withi a group and greater the difference between the groups,
+#   more distinct is the clustering.
+# -Cluster Analysis provides a way for users to discover potential relationships and construct
+#   systematic structures in large numbers of variables and observations.
+#--------------------------------
+# Types of clustering
+# -Hierarchical: Also known as nesting clusters as it also clusters to exist within bigger clusters
+#   to form a tree.
+# -Partitioned clustering: Its simply a division of the set of data objects into non-overlapping clusters
+#   such that each object is in exactly one subset.
+# -Exclusive clustering: They assign each object to a single cluster.
+# -Overlapping clustering: Its used to reflect the fact that an object can simultaneously belong to
+#   more than one group.
+# -Fuzzy clustering: Every object belongs to every cluster with a membership weight that goes
+#   between 0-if it absolutely doesn't belong to that cluster 1-if it absolutely belongs to the cluster.
+# -Complete clustering: It performs a hierarchical cluster analysis using a set of dissimilarities on 'n' 
+#   objects that are being clustered. They tend to find compact clusters of an approximately equal diameters.
+#
+# Types of clusters
+# -Well seperated: The distance between any two points in different groups is greater than the
+#  distance between any two points within a group. They need not be globular.
+# -Prototype based: The prototype of a cluster is often a centroid for data with continuous
+#   attributes. Such clusters tend to be globular.
+# -Graph based: When data is represented as a graph where nodes are the objects and links
+#   represent connection among the objects. They tend to be globular.
+# -Density based: This method is employed when the clusters are irregular and when noise and outliers are present.
+# -Shared property: Also known as conceptual clustering its the process of identifying the pattern in
+#  the clusters to successfully segregate into groups of clusters.
 
+# Methods to form clusters
+#
+# -K means: It's a prototype based clustering technique that attemps to define the number of
+#   clusters(K). They are represented as centroids.
+# -Agglomerative Hierarchical Clustering: It refers to a collection of closely related clustering
+#   techniques that produce a hierarchical clustering by starting with each point as singleton cluster
+#   and repeatedly merging the closest clusters until a single, all encompassing cluster remains.
+# -DBSCAN: A density based clustering algorithm that produces a partial clustering, in which
+#   number of clusters is automatically determined by the algorithm.
 
+# Example using simple dataset
+# load data
+clusterexample<-read.csv("file.csv",header=T)
+clusterexample
 
+#object Attribute.X Attribute.Y
+#1      A           1           1
+#2      B           2           1
+#3      C           4           3
+#4      D           5           4
 
+clusterexample$object<-NULL
+# k-means clustering function
+# k = number of attributes:
+# with 2 clusters
+results<-kmeans(clusterexample,2)
+results
+plot(clusterexample[c("Attribute.X","Attribute.Y")],col=results$cluster)
+points(results$centers,col=1:2,pch=8,cex=2)
 
-
-
-
-
-
-
-
-
-
-
-
+# Example of a hierarchical cluster
+# using europe info
+#load data
+europe<-read.csv("europe.csv",header = T)
+# using the hclust function to perform a hierarchical cluster type
+# load into a variable but remove the country name since it is not needed
+euroclust<-hclust(dist(europe[-1]))
+head(europe[-1])
+# Create a dendrogram
+plot(euroclust,labels=europe$Country)
+# Cluster them together visually by adding rectangles around the groups
+rect.hclust(euroclust,5)
+rect.hclust(euroclust,4)
 
