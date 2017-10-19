@@ -258,3 +258,160 @@ plot(euroclust,labels=europe$Country)
 rect.hclust(euroclust,5)
 rect.hclust(euroclust,4)
 
+#--------------------------------------------------------
+# Use of clustering function in R using the iris dataset
+#--------------------------------------------------------
+
+#kmeans function allows you to choose the # of K-means centroids
+newiris <-iris
+# exclude the Species variable
+newiris$Species<-NULL
+# since there are 3 Species of irises then use 3 as # of centroids
+# if the K-means is not known before then trial 
+kc <- kmeans(newiris,3)
+kc
+
+# create a table of values using the Species from the 3 clusters
+table(iris$Species,kc$cluster)
+# results
+#--------------------
+#1  2  3
+#setosa      0 50  0
+#versicolor  2  0 48
+#virginica  36  0 14
+
+# Plot the 3 clusters for visual
+plot(newiris[c("Sepal.Length","Sepal.Width")],col=kc$cluster)
+# accentuate the plot by using a star for centers of each cluster
+points(kc$centers,col=1:3,pch=8,cex=2)
+# use a dendogram to visualize the hierarchy of each cluster
+hc <-hclust(dist(iris),method="ave")
+# capture a sample of the iris dataset
+idx <- sample(1:dim(iris)[1],40)
+irisSample <- iris[idx,]
+
+irisSample$Species <-NULL
+# create a cluster of avg
+hc <-hclust(dist(irisSample),method = "ave")
+# Plot the sample and set the hang property to -1
+plot(hc,hang = -1,labels = iris$Species[idx])
+
+#----------------------------------------------------------------
+#
+# Time Series analysis
+# -Time series data is an ordered sequence of observations on a quantitative variable
+#    measured over an equally spaced time interval.
+# -Time series are used in statistics,signal processing,pattern recognotion,econometrics,
+#   mathematic finance, weather forecasting, earthquake prediction electroencephalography,
+#   control engineering, astronomy, communications engineering and other places.
+# -Time series analysis is
+#   - a set of methods used for analyzing time series data
+#   - and forecasting the future value of the variable under consideration.
+# -It is assumed that the data consist of a set of identifiable components and
+#   random errors which usually makes the patten difficult to identify
+#
+# Components of time series analysis
+# Long term trend
+# Seasonal variation
+# Cyclical variation
+# Irregular variation
+#  Stationary- when the data neither increases nor decreases (completely random)
+#  Non Stationary - data has some explainable portion remaining and can be analyzed further
+#
+
+# decompose() function in R is used to decompose the trend and seasonal component of a time series.
+# decompose() returns a list which stores the seasonal,trend and random components of the series.
+# Estimate of the seasonal component can be calculated by the decompose() function
+
+#-------------------------------------------------------------
+# Case study analysis of the time series
+#
+web1<-"http://rci.rutgers.edu/~rwomack/UNRATE.csv" #Unemployment rate
+web2<-"http://rci.rutgers.edu/~rwomack/CPIAUCSL.csv" # inflation rates
+
+unemploy<-read.csv(web1,row.names = 1)
+head(unemploy)
+
+inflate<-read.csv(web2,row.names = 1)
+head(inflate)
+
+class(unemploy)
+# convert to time series component
+urate<-ts(unemploy$VALUE,start=c(1948,1),freq=12)
+head(urate)
+
+irate<-ts(inflate$VALUE,start = c(1948,1),freq=12)
+class(irate)
+time(irate)
+# capture a subset of the time using the 'window' function
+urate.August<-window(urate,start=c(1980,8),freq=TRUE)
+urate.August
+plot(urate)
+plot(urate.August)
+
+# add a trendline
+
+plot(urate)
+abline(reg=lm(urate~time(urate)))
+# lets decompose the trend using the function
+decompose(urate)
+
+plot(decompose(urate))
+
+# compare the urate and irate and analyze
+plot(irate,urate)
+# now compare with time series
+ts.plot(irate,urate,col=c("blue","red"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
