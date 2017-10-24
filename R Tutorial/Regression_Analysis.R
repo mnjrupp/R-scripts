@@ -363,6 +363,77 @@ plot(irate,urate)
 # now compare with time series
 ts.plot(irate,urate,col=c("blue","red"))
 
+#-----------------------------------------------
+# Decomposing Non-Seasonal Time Series
+#
+#  Use Moving Average or Exponential Smoothing
+#  TTR package
+#   SMA - Simple moving average
+#   Smooth time series using a simple moving average
+#   To use the SMA() function, we need to specify the order(span) of the simple moving average, using the parameter "n"
+#   To Calculate a simple moving average of order5, we set n=5 in the SMA() function.
+#   Simple Exponential Smoothing
+#     1 Used to make short-tem forecasts
+#     2 Provides a way of estimating the level at the current time point.
+#     3 Smoothing is controlled by the parameter alpha
+#     4 The value of alpha lies between 0 and 1.
+#     5 The values of alpha that are close to 0 mean that little weight is placed on the most recent observations.
+#   Holt's Exponential Smoothing
+#     1 It considers the existence of trend values in the data.
+#     2 It fits the trend values non-parametrically
+#     3 Smoothing is done in two ways:
+#       a.Smooth between last actual data and its forecasted data
+#       b.Smoothing difference between the last two forecasted values and last trend value calculated.
+#   Holt - Winter Exponential Smothing
+#     1 This method the model takes care of even seasonality effect
+#     2 Winter's methos is also known as Holt-Winter's method of forecasting.
+#     3 Assumes the multiplicative seasonal effect and additive trend components
+#   EMA - Exponential Smoothing
+#    1 This method is useful for making forecasts, and make no assumptions about
+#       the correlations between successive values of the time series.
+#    2 To make prediction intervals for forecasts using exponential smoothing methods
+#       the forecast errors must be uncorrelated and normally distributed with mean zero and constant variance.
+#    3 An extension and generalization of moving average smoothing technique
+#    4 It continually revises a forecast in the light of more recent experience.
+#    5 It smoothens out the difference between the last actual data and its forecasted value.
+#   WMA - Weighted moving average
+# 
+#   Advantages of Exponential Smoothing
+#     1 Easy to understand
+#     2 Easy to implement
+#     3 It's a continual learning process
+#   Disadvantages
+#     1 Prediction can be made only to recent future
+#     2 It doesn't look at actual relationship with past
+#     3 Its accuracy falls for less number of data
+#--------------------------------
+# Exponential smoothing and forecasting in R
+#
+#   ETS,ARIMA,HoltWinters(MTS package)
+# ARIMA and HolWinters are used in longer forecasting(quarter year to 5 years) whereas Holt's 
+#  method and simple exponential smoothing are used in shorter periods.
+
+#Use case of monthly numeric data of cola sales
+# scan  the data at url
+cola1 <-scan("https://robjhyndman.com/tsdldata/data/fancy.dat")
+cola1
+# turn into a trend series for easier plotting. There are originally not dates.
+# will add them in using the ts() funtion
+cola2<-ts(cola1,freq=12,start=c(1987,1))
+cola2
+# now plot the series
+plot.ts(cola2)
+#
+# Because of flutuation as well as seasonal 
+
+
+
+
+
+
+
+
+
 
 
 
