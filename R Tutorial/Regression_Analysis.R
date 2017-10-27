@@ -424,38 +424,137 @@ cola2
 # now plot the series
 plot.ts(cola2)
 #
-# Because of flutuation as well as seasonal 
+# Because of flutuation as well as seasonal therefore
+# will transform data using the natural logrithm using log()
+logcola2<-log(cola2)
+plot.ts(logcola2)
 
+# Now use the log series using HoltWinters forecast
+cola2forecast<-HoltWinters(logcola2)
+cola2forecast
+# Will manipulate the gamma and values to 1
+hw1<-HoltWinters(logcola2,beta=1,gamma=1)
+hw1
 
+hw2<-HoltWinters(logcola2,beta=1,gamma=0)
+hw2
 
+hw3<-HoltWinters(logcola2,beta=0,gamma=1)
+hw3
 
+hw4<-HoltWinters(logcola2,beta=0,gamma=0)
+hw4
+# The Value of alpha: 0.2320474 is very low which means that the current value
+# is based upon distant values and not current.
+# the lower the value of alpha the less current the data used in the values.
+library(forecast)
+plot(forecast(logcola2))
+plot(forecast(cola2))
 
+# Box-Jenkins forecasting Model
+#   Based on statistical concepts and principles and are able to
+#     model a wide spectrum of time series behavior
+#   Box-Jenkins ARMA model is a combination of the AR and MA models
+#   Assumes that the time series is stationary
+#   Box and Jenkins recommend differencing non-stationary series one or more times to achieve
+#     stationarity. Doing so produces an ARIMA model, with the "I" standing for "Integrated".
+#   Some formulations transform the series by subtracting the mean of the series from each data point
+#     This yields a series with a mean of zero
+#   The models can be extended to include seasonal autoregressive and seasonal moving average
+#     terms. Although this complicates the notation, the terms are similar to the non-seasonal
+#      autoregressive and moving average terms
+#   Three Primary stages in building a Box-Jenkins time series model:
+#     Model Identification
+#     Model Estimation
+#     Model Validation
+#
+#   Box-Jenkins models are quite flexible due to the inclusion of both autoregressive and moving
+#     average terms
+#   Based on the Wold decomposition thereom, a stationary process can be approximated by an ARMA
+#     model. In practice, finding that approximation may not be easy.
+#   Building good ARIMA models generally requires more experience than commonly used statistical
+#     methods such as regression
+#   
+#   ARMA (autoregressive moving average) models are used in forecasting stationary models (whose mean and variance
+#     remain constant through time, i.e.,no trend effect).
+#   
+#   ARIMA (autoregressive integrated moving average) models are a general class of models for forecasting
+#     time series of non-stationary models that can be converted to stationary models using logging
+#     or differentiating.
+#   If you start off with a non-stationary time series, you will first need to 'difference' the time
+#     series until you obtain a stationary time series.
+#   To difference a time series using R use the "diff()" function.
 
+#------------------------------------------------------------------------------
+#
+# Examples of Autoregression models
+# load data of a brands sales over a period 4 financial years
+mydata<-read.csv("BrandData.csv")
+head(mydata)
+# create a time series
+TS_mydata = ts(mydata$NetSales_Qty,start=c(2010,4),frequency=12)
+TS_mydata
+plot(TS_mydata)
+#Plot has fluctuations in data making forecasting difficult
+library(forecast)
 
+model_arima<-auto.arima(TS_mydata)
+model_arima
+# What is the confidence of model
+confint(model_arima)
 
+#plot the new new forcast model
+forecast(model_arima,20)
+plot(forecast(model_arima,20))
 
+# create the seasonal model
+model_marima<-arima(TS_mydata,order = c(0,1,1),seasonal = list(order=c(0,1,1)))
+model_marima
 
+#forecast the new arima model
+forecast(model_marima,20)
+plot(forecast(model_marima,20))
 
+# Create an ets model which is an automated smoothing model
+model_ets<-ets(TS_mydata)
+model_ets
+forecast(model_ets,20)
+plot(forecast(model_ets,20))
 
+# Create a Hols-Winter model
+model_hw<-HoltWinters(TS_mydata)
+model_hw
 
+forecast(model_hw,20)
+plot(forecast(model_hw,20))
 
+model_tslm<-tslm(TS_mydata~trend+season)
+model_tslm
 
+plot(forecast(model_tslm,h=20))
 
+split.screen(figs = c(2,2))
+screen(1)
+plot(forecast(model_arima,20),main="Auto Arima")
+screen(2)
+plot(forecast(model_ets,20),main="ETS")
+screen(3)
+plot(forecast(model_hw,20),main="HoltWinters")
+screen(4)
+plot(forecast(model_tslm,h=20),main="Linear Regression")
 
+# Cannot determine by looking at the graphs with regression to use
+# will look at the AIC for all to determine
+# NOTE: cannot use AIC with the HoltWinters model
 
+AIC(model_arima,model_marima,model_ets,model_tslm)
+#df      AIC
+#model_arima   3 700.8074
+#model_marima  3 699.2266
+#model_ets    17 974.3600
+#model_tslm   14 962.8930
 
-
-
-
-
-
-
-
-
-
-
-
-
+# The ARIMA models has the least amount of data loss
 
 
 
