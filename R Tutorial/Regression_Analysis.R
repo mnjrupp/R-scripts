@@ -1,3 +1,26 @@
+# Summary of reference below
+#-----------------------------------
+# Regression Analysis
+#   Types of regression models
+#   Simple linear regression
+#   Logistic Regression
+#   Building regression models
+#
+# Cluster Analysis
+#   Types of clustering
+#   Types of clusters
+#   Methods to form clusters
+#
+# Time Series Analysis
+#   Components of time series
+#   Decomposition of time series - seasonal and non seasonal
+#   Exponential smoothing
+#   White noise
+#   Correlogram
+#   Box Jenkins
+#   ARIMA
+#-----------------------------------
+
 # Regression Analysis
 # Finding a relationship between a dependent variable
 # and one or more independent variables
