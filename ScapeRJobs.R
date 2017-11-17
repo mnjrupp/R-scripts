@@ -52,4 +52,69 @@ atag.issue_count <- sort(table(atag.clean),decreasing = TRUE)
 
 atag.issue_count[2:10]
 
+#-----------------------------------------------------------------------------
+# Web scraping example using the "XML" library
+#
+#library(XML)
+
+url <- "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population"
+
+# Tell the readHTMLTable function what table we want to read in
+# ONly 1 table on the page
+
+poptable <-readHTMLTable(url,which = 1)
+head(poptable)
+
+#------------------------------------------------------------------
+#,Web scraping using rvest package
+
+library(rvest)
+library(dplyr)
+
+google <-read_html("https://news.google.com/news/headlines?hl=en")
+
+google_news<-google%>%html_nodes(".kzAuJ")%>%html_text()
+str(google_news)
+head(google_news)
+google_news
+
+newl <-list()
+s <- html_session("https://news.google.com/news/headlines?hl=en")
+
+for(i in google_news[1:15]){
+  page <- s%>%follow_link(i)%>%read_html()
+  newl[[i]] <- page%>%html_nodes(".ME7ew")%>%html_text()
+  
+}
+newl[i]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
