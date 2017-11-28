@@ -24,15 +24,27 @@ url2 <- paste("http://www.deancare.com",next_url,sep = "")
 i <- 1
 # List to hold doctors as we loop through pages
 doctorl <- list()
+doctorl.title <- list()
+doctorl.location <- list()
 doctorl[[i]] <- page.2%>%html_nodes("span.DrName")%>%html_text()
+doctorl.title[[i]] <- page.2%>%html_nodes("span.DrTitles")%>%html_text()
+doctorl.location[[i]] <- page.2%>%html_nodes(".LocationName First")%>%html_text()
 
 while(i<doc_count){
     pageN <- read_html(url2)
     i=i+1
     doctorl[[i]] <- pageN%>%html_nodes("span.DrName")%>%html_text()
+    doctorl.title[[i]] <- pageN%>%html_nodes("span.DrTitles")%>%html_text()
+    doctorl.location[[i]] <- pageN%>%html_nodes(".LocationName First")%>%html_text()
+    
     next_url <- pageN%>%html_node("a.Next")%>%xml_attr("href")
     url2 <- paste("http://www.deancare.com",next_url,sep = "")
 }
-
+doctorl.df <- data.frame(
+  doctor_name = unlist(doctorl),
+  doctor_title = unlist(doctorl.title),
+  doctor_location = unlist(doctorl.location)
+  )
+  
 
 
