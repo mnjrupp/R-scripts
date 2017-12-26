@@ -2,6 +2,9 @@ library(shiny)
 library(shinydashboard)
 library(rCharts)
 
+# set working directory
+setwd("F:/documents/RStudio/shiny/shinydashboards")
+
 # Data preparation code
 # function to convert to POSIXct date format, specifically for line chart
 to_jsdate2 <- function(x){
@@ -43,30 +46,47 @@ ui <- dashboardPage(
   dashboardSidebar(
     dateRangeInput(inputId = "dateRange",label="Date Range",
                    start="2012-01-01",end=Sys.Date(),
-                   format = "mm/dd/yyyy")
-  ),
+                   format = "mm/dd/yyyy"),
+   sidebarMenu(
+     menuItem("Operations",tabName = "operations"),
+    menuSubItem("Projects Analysis",tabName = "projects",icon = icon("bar-chart-o")),
+    menuSubItem("Raw data",tabName="raw",icon = icon("table"))
+  )),
   dashboardBody(
+    tabItems(
+      tabItem("operations",
+              h1("This is the main page of the demo"),
+              h3("place main chart of links here")),
+     tabItem("projects",
     box(
-      showOutput("PI_growth_chart","highcharts")
+      showOutput("PI_growth_chart","highcharts"),width = 4
     ),
     box(
       selectInput(inputId = "group",label = "Group by:",
                   choices = c("Application","FundingType"),
-                              selected = "Application"),
-      plotOutput("FrequencyChart",height = 300)
+                  selected = "Application"),
+      plotOutput("FrequencyChart",height = 300),width = 4
     ),
     box(
       selectInput(inputId = "distVar",label = "Distribution of: ",
                   choices = c("HoursLogged","DaysOpen"),
                   selected = "HoursLogged"),
-      plotOutput("DistributionPlot",height = 300)
+      plotOutput("DistributionPlot",height = 300),width = 4
+      )
+    ),
+    tabItem("raw",
+            fluidRow(
+              box(width = 12,
+            dataTableOutput("table"))
+            )
     )
+   )
   )
+
 )
-  
-  
-  
-  
+
+
+
 server <- function(input,output){
   filteredData <-reactive({
     filtered_PI_growth <- subset(PI_cumul_growth,Month >= input$dateRange[1] &
@@ -98,6 +118,8 @@ server <- function(input,output){
                      xlab = VAR)
     histPlot
   })
+  
+  output$table <-renderDataTable({opsdata})
 }
 
 
