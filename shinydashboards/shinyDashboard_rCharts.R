@@ -59,6 +59,7 @@ ui <- dashboardPage(
               h3("place main chart of links here")),
      tabItem("projects",
     box(
+      downloadButton("pdfdown","download PDF"),
       showOutput("PI_growth_chart","highcharts"),width = 4
     ),
     box(
@@ -77,7 +78,8 @@ ui <- dashboardPage(
     tabItem("raw",
             fluidRow(
               box(width = 12,
-            dataTableOutput("table"))
+            dataTableOutput("table"),
+            downloadButton("downloadData","Download"))
             )
     )
    )
@@ -120,6 +122,42 @@ server <- function(input,output){
   })
   
   output$table <-renderDataTable({opsdata})
+  # downloadHandler function used to download the content
+  output$downloadData <- downloadHandler(
+    
+    filename = "opsdata.csv",
+    content = function(file){
+      write.table(opsdata,file,sep = ",",row.names = F)
+    }
+    
+  )
+  
+  output$pdfdown <- downloadHandler(
+    filename = "dashboard.pdf",
+    
+    content = function(file){
+      pdf(file)
+      # TODO: Need to fix the first plot hPlot not rendering
+        PI_growth_plot <- hPlot(x ~ date, type = "line", data = filteredData(), title = "Number of PIs")
+        PI_growth_plot$xAxis(type='datetime', title = list(text = "Time"))
+        PI_growth_plot$yAxis(title = list(text = "PIs"),
+                             min = 0, gridLineColor = "#ffffff")
+        PI_growth_plot$plotOptions(line = list(color = "#5C7A00", marker = list(enabled = F)))
+        PI_growth_plot$tooltip(dateTimeLabelFormats = list(month = "%A, %b %e, %Y"))
+        PI_growth_plot$chart(zoomType="x", height = 300)
+        PI_growth_plot$addParams(dom="PI_growth_chart")
+        PI_growth_plot
+      
+        GROUP <- input$group
+        plot(opsdata[,GROUP],main = "Number of Projects")
+       
+        VAR <- input$distVar
+        hist(opsdata[,VAR],main = paste0("Distribution of ", VAR),
+                         xlab = VAR)
+      
+      dev.off()
+    }
+  )
 }
 
 
