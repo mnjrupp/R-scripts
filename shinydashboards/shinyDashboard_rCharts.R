@@ -2,8 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(rCharts)
 
-# set working directory
-setwd("F:/documents/RStudio/shiny/shinydashboards")
+setwd("~/RStudio/shiny/shinydashboards")
 
 # Data preparation code
 # function to convert to POSIXct date format, specifically for line chart
@@ -41,50 +40,61 @@ PI_cumul_growth$date <- to_jsdate2(as.Date(PI_cumul_growth$Month))
 
 ui <- dashboardPage(
   dashboardHeader(
-    title = "Demo Dashboard"
+    title = "Demo Dashboard",
+    dropdownMenuOutput("msgOutput")
   ),
   dashboardSidebar(
     dateRangeInput(inputId = "dateRange",label="Date Range",
                    start="2012-01-01",end=Sys.Date(),
                    format = "mm/dd/yyyy"),
-   sidebarMenu(
-     menuItem("Operations",tabName = "operations"),
-    menuSubItem("Projects Analysis",tabName = "projects",icon = icon("bar-chart-o")),
-    menuSubItem("Raw data",tabName="raw",icon = icon("table"))
-  )),
+    sidebarMenu(
+      menuItem("Operations",tabName = "operations"),
+      menuSubItem("Projects Analysis",tabName = "projects",icon = icon("bar-chart-o")),
+      menuSubItem("Raw data",tabName="raw",icon = icon("table"))
+    )),
   dashboardBody(
     tabItems(
       tabItem("operations",
               h1("This is the main page of the demo"),
               h3("place main chart of links here")),
-     tabItem("projects",
-    box(
-      downloadButton("pdfdown","download PDF"),
-      showOutput("PI_growth_chart","highcharts"),width = 4
-    ),
-    box(
-      selectInput(inputId = "group",label = "Group by:",
-                  choices = c("Application","FundingType"),
-                  selected = "Application"),
-      plotOutput("FrequencyChart",height = 300),width = 4
-    ),
-    box(
-      selectInput(inputId = "distVar",label = "Distribution of: ",
-                  choices = c("HoursLogged","DaysOpen"),
-                  selected = "HoursLogged"),
-      plotOutput("DistributionPlot",height = 300),width = 4
-      )
-    ),
-    tabItem("raw",
-            fluidRow(
-              box(width = 12,
-            dataTableOutput("table"),
-            downloadButton("downloadData","Download"))
+      tabItem("projects",
+              fluidRow(
+                box(
+                
+                showOutput("PI_growth_chart","highcharts"),
+                width = 4
+              ),
+              box(
+                selectInput(inputId = "group",label = "Group by:",
+                            choices = c("Application","FundingType"),
+                            selected = "Application"),
+                plotOutput("FrequencyChart",height = 300),width = 4
+              ),
+              box(
+                selectInput(inputId = "distVar",label = "Distribution of: ",
+                            choices = c("HoursLogged","DaysOpen"),
+                            selected = "HoursLogged"),
+                plotOutput("DistributionPlot",height = 300),width = 4
+              )
+          ),
+          fluidRow(
+            box(
+              width = 4,
+              downloadButton("pdfdown","download PDF")
             )
+          )
+      )
+      ,
+      tabItem("raw",
+              fluidRow(
+                box(width = 12,
+                    dataTableOutput("table"),
+                    downloadButton("downloadData","Download"))
+              )
+      )
     )
-   )
   )
-
+  
 )
 
 
@@ -103,20 +113,32 @@ server <- function(input,output){
                          min = 0, gridLineColor = "#ffffff")
     PI_growth_plot$plotOptions(line = list(color = "#5C7A00", marker = list(enabled = F)))
     PI_growth_plot$tooltip(dateTimeLabelFormats = list(month = "%A, %b %e, %Y"))
-    PI_growth_plot$chart(zoomType="x", height = 300)
+    PI_growth_plot$chart(zoomType="x", height = 375)
     PI_growth_plot$addParams(dom="PI_growth_chart")
     return(PI_growth_plot)
   })
   
   output$FrequencyChart <- renderPlot({
     GROUP <- input$group
-    freqPlot <- plot(opsdata[,GROUP],main = "Number of Projects")
+    freqPlot <- plot(subset(opsdata[,GROUP],opsdata$created>=input$dateRange[1] &
+                              opsdata$created<= input$dateRange[2]) ,main = "Number of Projects")
     freqPlot
+  })
+  
+  output$d1 <- renderPlot({
+    GROUP <- input$group
+   d1 <- dPlot(
+    x ="Application" ,
+    data = opsdata[,"Application"],
+    type = "bar"
+  )
+   d1
   })
   
   output$DistributionPlot <- renderPlot({
     VAR <- input$distVar
-    histPlot <- hist(opsdata[,VAR],main = paste0("Distribution of ", VAR),
+    histPlot <- hist(subset(opsdata[,VAR],opsdata$created>=input$dateRange[1] &
+                              opsdata$created<= input$dateRange[2]),main = paste0("Distribution of ", VAR),
                      xlab = VAR)
     histPlot
   })
@@ -138,27 +160,35 @@ server <- function(input,output){
     content = function(file){
       pdf(file)
       # TODO: Need to fix the first plot hPlot not rendering
-        PI_growth_plot <- hPlot(x ~ date, type = "line", data = filteredData(), title = "Number of PIs")
-        PI_growth_plot$xAxis(type='datetime', title = list(text = "Time"))
-        PI_growth_plot$yAxis(title = list(text = "PIs"),
-                             min = 0, gridLineColor = "#ffffff")
-        PI_growth_plot$plotOptions(line = list(color = "#5C7A00", marker = list(enabled = F)))
-        PI_growth_plot$tooltip(dateTimeLabelFormats = list(month = "%A, %b %e, %Y"))
-        PI_growth_plot$chart(zoomType="x", height = 300)
-        PI_growth_plot$addParams(dom="PI_growth_chart")
-        PI_growth_plot
+      PI_growth_plot <- hPlot(x ~ date, type = "line", data = filteredData(), title = "Number of PIs")
+      PI_growth_plot$xAxis(type='datetime', title = list(text = "Time"))
+      PI_growth_plot$yAxis(title = list(text = "PIs"),
+                           min = 0, gridLineColor = "#ffffff")
+      PI_growth_plot$plotOptions(line = list(color = "#5C7A00", marker = list(enabled = F)))
+      PI_growth_plot$tooltip(dateTimeLabelFormats = list(month = "%A, %b %e, %Y"))
+      PI_growth_plot$chart(zoomType="x", height = 300)
+      PI_growth_plot$addParams(dom="PI_growth_chart")
+      PI_growth_plot
       
-        GROUP <- input$group
-        plot(opsdata[,GROUP],main = "Number of Projects")
-       
-        VAR <- input$distVar
-        hist(opsdata[,VAR],main = paste0("Distribution of ", VAR),
-                         xlab = VAR)
+     
+      
+      GROUP <- input$group
+      plot(opsdata[,GROUP],main = "Number of Projects")
+      
+      VAR <- input$distVar
+      hist(opsdata[,VAR],main = paste0("Distribution of ", VAR),
+           xlab = VAR)
       
       dev.off()
     }
   )
+  output$msgOutput <- renderMenu({
+    msgs <- apply(read.csv("data/messages.csv"),1,function(row){
+      messageItem(from=row[["from"]],message=row[["message"]])
+    })
+    dropdownMenu(type = "messages",.list = msgs)
+    
+  })
 }
-
 
 runApp(shinyApp(ui,server),launch.browser = TRUE)
